@@ -64,8 +64,41 @@ cd /tmp/tardirt
 timestamp=$(date '+%d%m%Y-%H%M%S')
 name="aleena-httpd-logs-$timestamp"
 
+File=/var/www/html/inventory.html
+
 tar -cvf $name.tar /var/log/apache2/*.log
 
+filename=$name.tar
+#size={du -h $filename |awk '{print $1;}'}
+#(du -h $filename) |awk '{print $1;}'
+
+#Check whether inventory file exists. If exists, write records into it
+if test -f "$File"; then
+    echo "$File exists."
+
+    echo "httpd-logs    $timestamp              ${filename: -3}         $(du -h                                                                                         $filename |awk '{print $1;}')
+">>$File
+
+#Creating new inventory file since it doesnt exist and writing records into it
+else
+	echo "inventory.html does not exists. Creating inventory.html"
+	echo "************************************"
+        echo "Log Type         Time Created         Type        Size" >$File
+        echo "httpd-logs    $timestamp              ${filename: -3}         $(du                                                                                         -h $filename |awk '{print $1;}')
+">>$File
+fi
+
+
+#Creating a crontab in /etc/cron.d/ directory
+echo "************************************"
+echo "Creating a crontab in /etc/cron.d/ directory"
+echo "************************************"
+echo "6 * * * * root /root/Automation_Project/automation.sh"> /etc/cron.d/automation
+
+#Copying Log files to S3 bucket
+echo "************************************"
+echo "Copying Log files to S3 bucket"
+echo "************************************"
 bucketname="upgrad-aleena"
 aws s3 \
 cp /tmp/tardirt/$name.tar \
